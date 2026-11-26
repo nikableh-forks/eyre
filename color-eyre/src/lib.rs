@@ -458,3 +458,8 @@ pub enum ErrorKind<'a> {
 pub fn install() -> Result<(), crate::eyre::Report> {
     config::HookBuilder::default().install()
 }
+
+// Reports are written to stderr by convention, so that is the stream we probe
+fn stderr_supports_color() -> bool {
+    anstream::AutoStream::choice(&std::io::stderr()) != anstream::ColorChoice::Never
+}

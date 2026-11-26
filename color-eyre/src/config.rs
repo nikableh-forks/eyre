@@ -475,6 +475,10 @@ impl HookBuilder {
     /// Set the global styles that `color_eyre` should use.
     ///
     /// **Tip:** You can test new styles by editing `examples/theme.rs` in the `color-eyre` repository.
+    ///
+    /// When the hooks are created, this theme is replaced with a blank one if
+    /// stderr does not support colors, for example when it is redirected to a
+    /// file or when `NO_COLOR` is set. `CLICOLOR_FORCE` keeps the colors on.
     pub fn theme(mut self, theme: Theme) -> Self {
         self.theme = theme;
         self
@@ -712,7 +716,11 @@ impl HookBuilder {
     /// Create a `PanicHook` and `EyreHook` from this `HookBuilder`.
     /// This can be used if you want to combine these handlers with other handlers.
     pub fn try_into_hooks(self) -> Result<(PanicHook, EyreHook), crate::eyre::Report> {
-        let theme = self.theme;
+        let theme = if crate::stderr_supports_color() {
+            self.theme
+        } else {
+            Theme::new()
+        };
         #[cfg(feature = "issue-url")]
         let metadata = Arc::new(self.issue_metadata);
         let panic_hook = PanicHook {
@@ -751,7 +759,7 @@ impl HookBuilder {
 
         #[cfg(feature = "capture-spantrace")]
         eyre::ResultExt::wrap_err(
-            color_spantrace::set_theme(self.theme.into()),
+            color_spantrace::set_theme(theme.into()),
             "could not set the provided `Theme` via `color_spantrace::set_theme` globally as another was already set",
         )?;
 

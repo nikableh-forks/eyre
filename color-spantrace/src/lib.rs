@@ -201,10 +201,22 @@ pub fn set_theme(theme: Theme) -> Result<(), InstallThemeError> {
 ///
 /// **Note:** `colorize` sets the global theme implicitly, if it was not set already. So calling `colorize` and then `set_theme` fails
 ///
+/// The implicit theme is [`Theme::dark`], or a blank theme if stderr does not
+/// support colors, for example when it is redirected to a file or when
+/// `NO_COLOR` is set.
+///
 /// [`SpanTrace`]: https://docs.rs/tracing-error/*/tracing_error/struct.SpanTrace.html
 pub fn colorize(span_trace: &SpanTrace) -> impl fmt::Display + '_ {
-    let theme = *THEME.get_or_init(Theme::dark);
+    let theme = *THEME.get_or_init(default_theme);
     ColorSpanTrace { span_trace, theme }
+}
+
+fn default_theme() -> Theme {
+    if anstream::AutoStream::choice(&std::io::stderr()) == anstream::ColorChoice::Never {
+        Theme::new()
+    } else {
+        Theme::dark()
+    }
 }
 
 struct ColorSpanTrace<'a> {

@@ -20,6 +20,7 @@ include = ["README.md", "LICENSE-APACHE", "LICENSE-MIT", "build.rs", "Cargo.toml
 indenter = "0.3.0"
 owo-colors = "4.3"
 autocfg = "1.0"
+anstream = { version = "1.0", default-features = false, features = ["auto"] }
 
 [profile.dev.package.backtrace]
 opt-level = 3
